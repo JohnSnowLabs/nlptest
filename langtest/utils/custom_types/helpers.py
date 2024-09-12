@@ -186,6 +186,10 @@ class Span(BaseModel):
         """"""
         return f"<Span(start={self.start}, end={self.end}, word='{self.word}')>"
 
+    def __add__(self, other: "Span") -> "Span":
+        """"""
+        return Span(start=self.start, end=other.end, word=f"{self.word} {other.word}")
+
 
 class Transformation(BaseModel):
     """
@@ -196,6 +200,24 @@ class Transformation(BaseModel):
     original_span: Span
     new_span: Span
     ignore: bool = False
+
+    def from_dict(self, data: dict):
+        """"""
+        self.original_span = Span(**data["original_span"])
+        self.new_span = Span(**data["new_span"])
+        self.ignore = data.get("ignore", False)
+
+    def to_dict(self):
+        """"""
+        import json
+
+        return json.dumps(
+            {
+                "original_span": self.original_span.dict(),
+                "new_span": self.new_span.dict(),
+                "ignore": self.ignore,
+            }
+        )
 
 
 class SimplePromptTemplate:

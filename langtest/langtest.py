@@ -826,7 +826,7 @@ class Harness:
 
         return self
 
-    def testcases(self) -> pd.DataFrame:
+    def testcases(self, additional_cols=False) -> pd.DataFrame:
         """Testcases after .generate() is called
 
         Returns:
@@ -869,6 +869,8 @@ class Harness:
             "expected_result",
         ]
 
+        if additional_cols:
+            column_order.extend(["transformations"])
         if isinstance(self._testcases, dict) and not self.is_multi_dataset:
             testcases_df = []
             for k, v in self._testcases.items():
@@ -1077,7 +1079,9 @@ class Harness:
             harness._generated_results = generated_results
         return harness
 
-    def edit_testcases(self, output_path: str, **kwargs):
+    def edit_testcases(
+        self, output_path: str = "./edit_testcases.csv", return_dataframe=False, **kwargs
+    ):
         """Testcases are exported to a csv file to be edited.
 
         The edited file can be imported back to the harness
@@ -1085,8 +1089,10 @@ class Harness:
         Args:
             output_path (str): path to save the testcases to
         """
-        temp_df = self.testcases()
+        temp_df = self.testcases(additional_cols=True)
         temp_df = temp_df[temp_df["category"].isin(["robustness", "bias"])]
+        if return_dataframe:
+            return temp_df
         temp_df.to_csv(output_path, index=False)
 
     def import_edited_testcases(self, input_path: str, **kwargs):
@@ -1137,6 +1143,7 @@ class Harness:
 
             # merge the testcases with the imported ones to the temp_testcases
             for name, list_samples in imported_testcases.items():
+                # check the task and apply transformations
                 if name not in temp_testcases:
                     temp_testcases[name] = list_samples
                 temp_testcases[name].extend(list_samples)
@@ -1163,6 +1170,7 @@ class Harness:
             self._testcases = DataFactory(
                 {"data_source": input_path}, task=self.task, is_import=True
             ).load()
+
             self._testcases.extend(temp_testcases)
 
         return self
