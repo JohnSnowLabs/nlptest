@@ -1,5 +1,7 @@
 from typing import Dict, List, Union
 
+from langtest.metrics.utils import PolicyManagerConfig, create_policy_manager
+
 
 class SafetyEval:
     pipeline = None
@@ -9,10 +11,12 @@ class SafetyEval:
         model_name: str = "meta-llama/Llama-Guard-3-8B-INT8",
         hub: str = "huggingface",
         model_kwargs: Dict[str, str] = None,
+        policies: PolicyManagerConfig = None,
     ) -> None:
         self.model_name = model_name
         self.hub = hub
         self.model_kwargs = model_kwargs or {}
+        self.policy_manager = create_policy_manager(**policies)
 
         if SafetyEval.pipeline is None:
             SafetyEval.pipeline = self.load_pipeline()
